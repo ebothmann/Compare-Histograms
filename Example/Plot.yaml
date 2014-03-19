@@ -1,12 +1,17 @@
 ---
-#binRange:         [0, 12]
+#binRange:           [0, 12]
 distributions:
-  - file:         Convolute.dat
-    column:       5
-  - file:         Rivet.yoda          # YODA files may consist of several
-                                      # histograms. If not further specified,
-                                      # the first one is used that matches the
-                                      # number of bins in the other files
-    isNormalized: Yes                 # All other histograms will be normalized
-                                      # w.r.t. this histogram
+  - file:           FixedOrder.B.V.I.RS.dat
+    column:         3                   # Column numbering starts from 0
+  - file:           FixedOrder.BVI.RS.dat
+    column:         3                   
+  - file:           Rivet.yoda          # YODA files may consist of several
+                                        # histograms. If not further specified,
+                                        # the first one is used that matches
+                                        # the number of bins in the other files
+    isNormalized:   Yes                 # All other histograms will be
+                                        # normalized w.r.t. this histogram
+    # histogramIndex: 0                   # A YODA only parameter that specifies
+                                        # the index of the histogram in the
+                                        # YODA file, starting from 0
 ...
