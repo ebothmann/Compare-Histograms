@@ -1,3 +1,7 @@
+Citing `matplotlib` in a publication
+==========
+See [matplotlib FAQ](http://matplotlib.org/faq/howto_faq.html#cite-matplotlib)
+
 Configuration file format
 ==========
 

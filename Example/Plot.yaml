@@ -1,5 +1,7 @@
 ---
-#binRange:           [0, 12]
+# binRange:           [2, 12]
+histogramStyle:     step                # Supported options: `bar` (default)
+                                        # and `step`
 distributions:
   - file:           FixedOrder.B.V.I.RS.dat
     column:         3                   # Column numbering starts from 0

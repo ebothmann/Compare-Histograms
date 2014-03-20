@@ -5,9 +5,11 @@ from __future__ import print_function
 import yoda
 import numpy
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import yaml
 import sys
 import os.path
+import itertools
 
 # TODO: Include parsing of arguments
 # These should have a higher priority compared to the configuration file
@@ -135,17 +137,38 @@ if (normalizedHistogram):
             histogram[i] = histogram[i] - normalizedHistogram[i]
             histogram[i] /= normalizedHistogram[i]
 
-print(histograms)
-print(normalizedHistogram)
-
 fig, ax = plt.subplots()
 
 subBinWidths = [binWidth/(len(histograms)) for binWidth in binWidths]
 
+colorCycle = mpl.rcParams['axes.color_cycle']
+
+style = ""
+try:
+    style = configuration["histogramStyle"]
+except KeyError:
+    pass
+
+if style == 'step':
+    rightBinEdges = [leftBinEdge + binWidth
+                     for leftBinEdge, binWidth
+                     in zip(leftBinEdges, binWidths)]
+
 for i in range(len(histograms)):
     leftSubBinEdges = list(leftBinEdges)
-    for j in range(len(leftBinEdges)):
-        leftSubBinEdges[j] += binWidths[j] / len(histograms) * i
-    ax.bar(leftSubBinEdges, histograms[i], subBinWidths)
+    if style == 'step':
+        x = numpy.ravel(zip(leftBinEdges, rightBinEdges))
+        y = numpy.ravel(zip(histograms[i], histograms[i]))
+        print(x)
+        print(y)
+        ax.plot(x, y)
+    else:
+        for j in range(len(leftBinEdges)):
+            leftSubBinEdges[j] += binWidths[j] / len(histograms) * i
+        ax.bar(leftSubBinEdges,
+               histograms[i],
+               subBinWidths,
+               color=colorCycle[i],
+               linewidth=0)
 
 plt.show()
