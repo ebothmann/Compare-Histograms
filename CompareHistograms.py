@@ -153,11 +153,13 @@ if style == 'step':
     rightBinEdges = [leftBinEdge + binWidth
                      for leftBinEdge, binWidth
                      in zip(leftBinEdges, binWidths)]
+    x = numpy.ravel(zip(leftBinEdges, rightBinEdges))
+    if style == 'step':
+        ax.plot(x, [0] * len(x), color='grey')
 
 for i in range(len(histograms)):
     leftSubBinEdges = list(leftBinEdges)
     if style == 'step':
-        x = numpy.ravel(zip(leftBinEdges, rightBinEdges))
         y = numpy.ravel(zip(histograms[i], histograms[i]))
         print(x)
         print(y)
