@@ -2,11 +2,28 @@
 # binRange:           [2, 12]
 histogramStyle:     step                # Supported options: `bar` (default)
                                         # and `step`
+logarithmic:        No                  # Note that `Yes` will turn negative
+                                        # values positive
+
 distributions:
   - file:           FixedOrder.B.V.I.RS.dat
     column:         3                   # Column numbering starts from 0
+    hidden:         No
+  - file:           FixedOrder.B.V.I.RS.as0.dat
+    column:         3
+    hidden:         No
   - file:           FixedOrder.BVI.RS.dat
-    column:         3                   
+    column:         3
+    hidden:         No
+  - file:           FixedOrder.BVI.RS.as0.dat
+    column:         3
+    hidden:         Yes
+  - file:           MCatNLO.dat
+    column:         3   
+    hidden:         Yes   
+  - file:           MCatNLO.as0.dat
+    column:         3
+    hidden:         Yes
   - file:           Rivet.yoda          # YODA files may consist of several
                                         # histograms. If not further specified,
                                         # the first one is used that matches

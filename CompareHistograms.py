@@ -9,7 +9,6 @@ import matplotlib as mpl
 import yaml
 import sys
 import os.path
-import itertools
 
 # TODO: Include parsing of arguments
 # These should have a higher priority compared to the configuration file
@@ -47,6 +46,13 @@ yodaDistributions = []
 normalizedHistogram = None
 
 for distribution in configuration["distributions"]:
+
+    try:
+        if distribution["hidden"]:
+            continue
+    except KeyError:
+        pass
+
     fileName = distribution["file"]
     extension = os.path.splitext(fileName)[-1].lower()
 
@@ -157,13 +163,20 @@ if style == 'step':
     if style == 'step':
         ax.plot(x, [0] * len(x), color='grey')
 
+logarithmic = False
+try:
+    logarithmic = configuration["logarithmic"]
+except KeyError:
+    pass
+
 for i in range(len(histograms)):
     leftSubBinEdges = list(leftBinEdges)
+    if logarithmic:
+        histograms[i] = abs(histograms[i])
     if style == 'step':
-        y = numpy.ravel(zip(histograms[i], histograms[i]))
-        print(x)
-        print(y)
-        ax.plot(x, y)
+        # y = numpy.ravel(zip(histograms[i], histograms[i]))
+        # ax.plot(x, y)
+        ax.step(leftSubBinEdges, histograms[i])
     else:
         for j in range(len(leftBinEdges)):
             leftSubBinEdges[j] += binWidths[j] / len(histograms) * i
@@ -171,6 +184,9 @@ for i in range(len(histograms)):
                histograms[i],
                subBinWidths,
                color=colorCycle[i],
-               linewidth=0)
+               linewidth=0,
+               log=logarithmic)
 
+if logarithmic and style == 'step':
+    plt.yscale('log')
 plt.show()
