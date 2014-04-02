@@ -127,7 +127,7 @@ for yodaDistribution in yodaDistributions:
             raise Exception("There may only be one normalized histogram")
         normalizedHistogram = binHeights
     else:
-        histograms.append()
+        histograms.append(binHeights)
     if len(leftBinEdges) == 0:
         leftBinEdges = [bin.edges[0] for bin in yodaHistoBins]
         binWidths = [bin.edges[1] - bin.edges[0] for bin in yodaHistoBins]

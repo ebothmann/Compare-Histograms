@@ -1,36 +1,32 @@
 ---
-# binRange:           [2, 12]
-histogramStyle:     step                # Supported options: `bar` (default)
-                                        # and `step`
-logarithmic:        No                  # Note that `Yes` will turn negative
-                                        # values positive
+histogramStyle:     step
+logarithmic:        No
 
 distributions:
   - file:           FixedOrder.B.V.I.RS.dat
-    column:         3                   # Column numbering starts from 0
+    column:         2
     hidden:         No
   - file:           FixedOrder.B.V.I.RS.as0.dat
-    column:         3
-    hidden:         No
+    column:         2
+    hidden:         Yes
   - file:           FixedOrder.BVI.RS.dat
-    column:         3
+    column:         2
     hidden:         No
   - file:           FixedOrder.BVI.RS.as0.dat
-    column:         3
+    column:         2
     hidden:         Yes
   - file:           MCatNLO.dat
-    column:         3   
+    column:         2   
     hidden:         Yes   
   - file:           MCatNLO.as0.dat
-    column:         3
+    column:         2
     hidden:         Yes
-  - file:           Rivet.yoda          # YODA files may consist of several
-                                        # histograms. If not further specified,
-                                        # the first one is used that matches
-                                        # the number of bins in the other files
-    isNormalized:   Yes                 # All other histograms will be
-                                        # normalized w.r.t. this histogram
-    # histogramIndex: 0                   # A YODA only parameter that specifies
-                                        # the index of the histogram in the
-                                        # YODA file, starting from 0
+  - file:           MCatNLO_fixed_xi.dat
+    column:         2
+    hidden:         No
+  - file:           MCatNLO_fixed_xi_wo_HS_event_weighting.dat
+    column:         2
+    hidden:         No
+  - file:           Rivet.yoda
+    isNormalized:   No
 ...
