@@ -1,4 +1,5 @@
 Sample\ Code
+Example/Results/
 
 # Created by http://www.gitignore.io
 
@@ -82,4 +83,10 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
+
+# Created by http://www.gitignore.io
+
+### IPythonNotebook ###
+# Temporary data
+.ipynb_checkpoints/
 

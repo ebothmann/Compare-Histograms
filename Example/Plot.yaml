@@ -1,32 +1,68 @@
 ---
 histogramStyle:     step
 logarithmic:        No
+# yRange:             [0.000, 0.018]
 
 distributions:
-  - file:           FixedOrder.B.V.I.RS.dat
-    column:         2
-    hidden:         No
-  - file:           FixedOrder.B.V.I.RS.as0.dat
+
+  - file:           MCatNLO_1M_5M.dat
     column:         2
     hidden:         Yes
-  - file:           FixedOrder.BVI.RS.dat
-    column:         2
-    hidden:         No
-  - file:           FixedOrder.BVI.RS.as0.dat
-    column:         2
-    hidden:         Yes
-  - file:           MCatNLO.dat
-    column:         2   
-    hidden:         Yes   
-  - file:           MCatNLO.as0.dat
-    column:         2
-    hidden:         Yes
-  - file:           MCatNLO_fixed_xi.dat
-    column:         2
-    hidden:         No
-  - file:           MCatNLO_fixed_xi_wo_HS_event_weighting.dat
-    column:         2
-    hidden:         No
-  - file:           Rivet.yoda
+  - file:           MCatNLO_1M_5M.yoda
     isNormalized:   No
+    histogramIndex: 1
+    hidden:         Yes
+
+  - file:           MCatNLO_g_u_d_1M.dat
+    column:         2
+    hidden:         Yes
+  - file:           MCatNLO_g_u_d_1M.yoda
+    isNormalized:   No
+    hidden:         Yes
+    histogramIndex: 1
+
+  - file:           MCatNLO-NoEm_1M_5M.dat
+    column:         2
+    hidden:         Yes
+  - file:           MCatNLO-NoEm_1M_5M.yoda
+    isNormalized:   No
+    hidden:         Yes
+
+  - file:           MCatNLO-NoPS_1M_5M.dat
+    column:         2
+    hidden:         Yes
+  - file:           MCatNLO-NoPS_1M_5M.yoda
+    isNormalized:   No
+    hidden:         Yes
+
+  - file:           MCatNLO-CSS_NOEM_1M_5M.dat
+    column:         2
+    hidden:         Yes
+  - file:           MCatNLO-CSS_NOEM_1M_5M.yoda
+    isNormalized:   No
+    hidden:         Yes
+
+  - file:           BVI.RS_1M_10M.dat
+    column:         2
+    hidden:         Yes
+  - file:           BVI.RS_1M_10M.yoda
+    hidden:         Yes
+    histogramIndex: 1
+
+  - file:           B.V.I.RS_1M_10M.dat
+    column:         2
+    hidden:         Yes
+    isNormalized:   Yes
+  - file:           B.V.I.RS_1M_10M.yoda
+    isNormalized:   No
+    hidden:         Yes
+
+  - file:           BVI.RS_g_u_d.dat
+    column:         2
+    hidden:         No
+    isNormalized:   No
+  - file:           BVI.RS_g_u_d.yoda
+    isNormalized:   Yes
+    hidden:         No
 ...
+

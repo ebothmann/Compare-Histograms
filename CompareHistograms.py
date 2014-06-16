@@ -39,6 +39,11 @@ try:
 except KeyError:
     binRange = [0, 0]
 
+try:
+    yRange = configuration["yRange"]
+except KeyError:
+    yRange = None
+
 leftBinEdges = []
 binWidths = []
 histograms = []
@@ -76,7 +81,8 @@ for distribution in configuration["distributions"]:
             isNormalized = False
         binHeights = data[binRange[0]:binRange[0]+binRange[1], column]
         if isNormalized:
-            if (normalizedHistogram):
+            print("Normalized dat distribution detected")
+            if (normalizedHistogram is not None):
                 raise Exception("There may only be one normalized histogram")
             normalizedHistogram = binHeights
         else:
@@ -92,10 +98,10 @@ for distribution in configuration["distributions"]:
                         "distribution file names.")
 
 for yodaDistribution in yodaDistributions:
-    fileName = distribution["file"]
+    fileName = yodaDistribution["file"]
     yodaHistos = yoda.readYODA(fileName)
     try:
-        histogramIndex = distribution["histogramIndex"]
+        histogramIndex = yodaDistribution["histogramIndex"]
     except KeyError:
         # The histogram index is not explicitly given
         histogramIndex = 0
@@ -115,15 +121,17 @@ for yodaDistribution in yodaDistributions:
                                 " range")
     yodaHistoBins = yodaHistos[histogramIndex].bins
     if binRange[1] == 0:
-        binRange[1] = yodaHistoBins.len()
+        binRange[1] = len(yodaHistoBins)
     try:
-        isNormalized = distribution["isNormalized"]
+        isNormalized = yodaDistribution["isNormalized"]
     except KeyError:
         isNormalized = False
+    if isNormalized:
+        print("Normalized yoda distribution detected")
     yodaValues = [bin.height for bin in yodaHistoBins]
     binHeights = yodaValues[binRange[0]:binRange[0]+binRange[1]]
     if isNormalized:
-        if (normalizedHistogram):
+        if (normalizedHistogram is not None):
             raise Exception("There may only be one normalized histogram")
         normalizedHistogram = binHeights
     else:
@@ -136,7 +144,7 @@ assert(len(leftBinEdges))
 assert(len(leftBinEdges) == len(binWidths))
 assert(len(histograms))
 
-if (normalizedHistogram):
+if (normalizedHistogram is not None):
     # Normalize histograms
     for histogram in histograms:
         for i in range(len(histogram)):
@@ -176,7 +184,7 @@ for i in range(len(histograms)):
     if style == 'step':
         # y = numpy.ravel(zip(histograms[i], histograms[i]))
         # ax.plot(x, y)
-        ax.step(leftSubBinEdges, histograms[i])
+        ax.step(leftSubBinEdges, histograms[i])  #, 'g')
     else:
         for j in range(len(leftBinEdges)):
             leftSubBinEdges[j] += binWidths[j] / len(histograms) * i
@@ -189,4 +197,8 @@ for i in range(len(histograms)):
 
 if logarithmic and style == 'step':
     plt.yscale('log')
+
+if yRange:
+    plt.ylim(yRange)
+
 plt.show()
