@@ -102,24 +102,28 @@ for yodaDistribution in yodaDistributions:
     yodaHistos = yoda.readYODA(fileName)
     try:
         histogramIndex = yodaDistribution["histogramIndex"]
+        raise Exception("Do not use histogramIndex, use histogramName")
+    except KeyError:
+        pass
+    try:
+        histogramName = yodaDistribution["histogramName"]
     except KeyError:
         # The histogram index is not explicitly given
-        histogramIndex = 0
+        histogramName = ""
         if binRange[1] > 0:
             # We already have a valid bin range
             # Try to find a matching histogram
-            i = 0
-            for yodaHisto in yodaHistos:
+            for yodaHistoName in yodaHistos:
+                yodaHisto = yodaHistos[yodaHistoName]
                 if (isinstance(yodaHisto, yoda.core.Histo1D)):
                     if (len(yodaHisto.bins) >= binRange[0] + binRange[1]):
-                        histogramIndex = i
+                        histogramName = yodaHistoName
                         continue
-                i += 1
-            if i == len(yodaHistos):
+            if len(histogramName) == 0:
                 raise Exception("There is no YODA histogram in " + fileName +
                                 " which has enough bins to accommodate the bin"
                                 " range")
-    yodaHistoBins = yodaHistos[histogramIndex].bins
+    yodaHistoBins = yodaHistos[histogramName].bins
     if binRange[1] == 0:
         binRange[1] = len(yodaHistoBins)
     try:
@@ -184,7 +188,17 @@ for i in range(len(histograms)):
     if style == 'step':
         # y = numpy.ravel(zip(histograms[i], histograms[i]))
         # ax.plot(x, y)
-        ax.step(leftSubBinEdges, histograms[i])  #, 'g')
+        leftSubBinEdges.append(rightBinEdges[-1])
+        try:
+            histogramList = histograms[i].tolist()
+        except AttributeError:
+            histogramList = histograms[i]
+        histogramList.append(histogramList[-1])
+        print(histogramList)
+        print(leftSubBinEdges)
+        ax.step(leftSubBinEdges,
+                histogramList,
+                where='post')  # , 'g')
     else:
         for j in range(len(leftBinEdges)):
             leftSubBinEdges[j] += binWidths[j] / len(histograms) * i

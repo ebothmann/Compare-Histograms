@@ -1,9 +1,23 @@
 ---
 histogramStyle:     step
 logarithmic:        No
-# yRange:             [0.000, 0.018]
+#yRange:             [0.000, 0.018]
 
 distributions:
+
+  - file:           RS-infty.dat
+    column:         2
+    hidden:         No
+  - file:           RS-infty.yoda
+    isNormalized:   Yes
+    hidden:         No
+
+  - file:           test.dat
+    column:         2
+    hidden:         Yes
+  - file:           test.yoda
+    isNormalized:   Yes
+    hidden:         Yes
 
   - file:           MCatNLO_1M_5M.dat
     column:         2
@@ -21,6 +35,21 @@ distributions:
     hidden:         Yes
     histogramIndex: 1
 
+  - file:           MCatNLO_g_u_d_1M.yoda
+    column:         2
+    hidden:         Yes
+    histogramIndex: 1
+  - file:           MCatNLO-NoPS_1M_5M.yoda
+    isNormalized:   No
+    hidden:         Yes
+
+  - file:           MCatNLO_g_u_d_100K_500K.dat
+    column:         2
+    hidden:         Yes
+  - file:           MCatNLO_g_u_d_100K_500K.yoda
+    isNormalized:   Yes
+    hidden:         Yes
+
   - file:           MCatNLO-NoEm_1M_5M.dat
     column:         2
     hidden:         Yes
@@ -33,6 +62,27 @@ distributions:
     hidden:         Yes
   - file:           MCatNLO-NoPS_1M_5M.yoda
     isNormalized:   No
+    hidden:         Yes
+
+  - file:           MCatNLO-NoPS-H-mewgt-mod_100K_500K.dat
+    column:         2
+    hidden:         Yes
+  - file:           MCatNLO-NoPS-H-mewgt-mod_100K_500K.yoda
+    isNormalized:   Yes
+    hidden:         Yes
+
+  - file:           Z_pT_BVI_RS_1M_5M.dat
+    column:         2
+    hidden:         Yes
+  - file:           Z_pT_BVI_RS_1M_5M.yoda
+    isNormalized:   Yes
+    hidden:         Yes
+
+  - file:           Z_pT_MC@NLO-NoPS_10K_50K.dat
+    column:         2
+    hidden:         Yes
+  - file:           Z_pT_MC@NLO-NoPS_10K_50K.yoda
+    isNormalized:   Yes
     hidden:         Yes
 
   - file:           MCatNLO-CSS_NOEM_1M_5M.dat
@@ -59,10 +109,29 @@ distributions:
 
   - file:           BVI.RS_g_u_d.dat
     column:         2
-    hidden:         No
+    hidden:         Yes
     isNormalized:   No
   - file:           BVI.RS_g_u_d.yoda
     isNormalized:   Yes
-    hidden:         No
+    hidden:         Yes
+
+  - file:           Higgs_pT@100TeV.dat
+    column:         2
+    hidden:         Yes
+    isNormalized:   No
+  - file:           Higgs_pT@100TeV.yoda
+    isNormalized:   Yes
+    hidden:         Yes
+    histogramIndex: 5
+
+  - file:           higgs3-8TeV-Pure-EHC.10M.yoda
+    column:         2
+    hidden:         Yes
+    isNormalized:   Yes
+    histogramIndex: 1
+  - file:           higgs3-8TeV-Silvan.10M.yoda
+    isNormalized:   No
+    hidden:         Yes
+    histogramIndex: 5
 ...
 
