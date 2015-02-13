@@ -475,7 +475,7 @@ if args.usetex:
     fig_size = figure_size_from_width(line_width * fig_line_width_fraction)
 
     # Set parameters
-    params = {'font.size': 9,
+    params = {'font.size': 11,
               # 'axes.labelsize': 10,
               # 'text.fontsize': 10,
               # 'legend.fontsize': 10,
