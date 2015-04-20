@@ -14,6 +14,8 @@ import yoda
 import numpy
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+from matplotlib.ticker import MaxNLocator
+import matplotlib.gridspec as gridspec
 import yaml
 import grapefruit
 import seaborn as sns
@@ -164,6 +166,9 @@ def plot(configurationFileName):
     yRange = readConfiguration(configuration,
                                key='yRange',
                                default=None)
+    diffYRange = readConfiguration(configuration,
+                               key='diffYRange',
+                               default=None)
     xRange = readConfiguration(configuration,
                                key='xRange',
                                default=None)
@@ -172,8 +177,10 @@ def plot(configurationFileName):
     leftBinEdges = []
     binWidths = []
     histograms = []
+    diffHistograms = []  # Histograms included in diff plot
     labels = []
     normalizedHistogram = None
+    normalizedDiffHistogram = None  # Histogram to be normalized against in diff plot
 
     distributions = sorted(configuration["distributions"],
                            key=lambda distribution: isYODA(distribution))
@@ -226,7 +233,7 @@ def plot(configurationFileName):
                 binWidths,
                 scalingReversed,
                 overallScaling)[3]
-            binHeights = [binHeight / otherBinHeight # / 93710965.0 * 100000000 # (93710965.0 / 106979031.0) # - 1.0
+            binHeights = [1.0 if otherBinHeight == 0.0 else binHeight / otherBinHeight
                           for binHeight, otherBinHeight
                           in zip(binHeights, binHeightsToNormalizeBy)]
 
@@ -247,7 +254,21 @@ def plot(configurationFileName):
                                       default=fileName)
             labels.append(label)
 
-        
+        isDiffNormalized = readConfiguration(distribution,
+                                         key='diffNormalized',
+                                         default=False)
+        isDiff = readConfiguration(distribution,
+                                         key='diff',
+                                         default=False)
+
+        diffBinHeights = list(binHeights)  # Make a copy here to be error-prone
+        if isDiffNormalized:
+            if (normalizedDiffHistogram is not None):
+                raise Exception("There may only be "
+                                "one normalized histogram for the diff plot")
+            normalizedDiffHistogram = diffBinHeights
+        elif isDiff:
+            diffHistograms.append(diffBinHeights)
 
     assert(len(leftBinEdges))
     assert(len(leftBinEdges) == len(binWidths))
@@ -263,7 +284,32 @@ def plot(configurationFileName):
                 else:
                     histogram[i] /= normalizedHistogram[i]
 
-    fig, ax = plt.subplots()
+
+    wantsDiffSubplot = False
+    if (normalizedDiffHistogram is not None) and (len(diffHistograms) > 0):
+        wantsDiffSubplot = True
+        # Normalize diff histograms
+        for histogram in diffHistograms:
+            for i in range(len(histogram)):
+                if normalizedDiffHistogram[i] == 0.0:
+                    print("Normalized bin height is 0")
+                    histogram[i] = 1.0
+                else:
+                    histogram[i] /= normalizedDiffHistogram[i]
+
+    fig = plt.figure()
+    if wantsDiffSubplot:
+        gs = gridspec.GridSpec(2, 1,
+                       height_ratios=[2,1]
+                       )
+        ax1 = plt.subplot(gs[0])
+        ax2 = plt.subplot(gs[1])
+        ax = numpy.array([[ax1],[ax2]])
+
+        # fig, ax = plt.subplots(nrows=2, sharex=True, squeeze=False)
+    else:
+        ax1 = plt.subplot()
+        ax = numpy.array([[ax1],[None]])
 
     subBinWidths = [binWidth/(len(histograms)) for binWidth in binWidths]
 
@@ -337,7 +383,7 @@ def plot(configurationFileName):
                         linewidth = 2.0
                     else:
                         linewidth = 1.0
-                    ax.step(leftSubBinEdges,
+                    ax[0,0].step(leftSubBinEdges,
                             histogramList,
                             'black',
                             alpha=1.0,
@@ -347,7 +393,7 @@ def plot(configurationFileName):
                             # color=baseColorNames[5],
                             label=labels[i])
                 else:
-                    ax.step(leftSubBinEdges,
+                    ax[0,0].step(leftSubBinEdges,
                             histogramList,
                             'g',
                             alpha=0.5,
@@ -357,21 +403,57 @@ def plot(configurationFileName):
                             label='Replicas')
             else:
                 # color = baseColorNames[i]
-                ax.step(leftSubBinEdges,
+                if i == 0:
+                    ax[0,0].step(leftSubBinEdges,
                         histogramList,
                         where='post',
-                        # color=color,
+                        # color=colorCycle[0],
                         label=labels[i])
+                else:
+                    ax[0,0].step(leftSubBinEdges,
+                        histogramList,
+                        where='post',
+                        # color=colorCycle[2],
+                        alpha=0.75,
+                        label=labels[i])
+
         else:
             for j in range(len(leftBinEdges)):
                 leftSubBinEdges[j] += binWidths[j] / len(histograms) * i
-            ax.bar(leftSubBinEdges,
+            ax[0,0].bar(leftSubBinEdges,
                    histograms[i],
                    subBinWidths,
                    color=colorCycle[i],
                    linewidth=0,
                    log=logarithmic,
                    label=labels[i])
+
+    for i in range(len(diffHistograms)):
+        # First draw line normalized against
+        ax[1,0].plot([leftBinEdges[0], rightBinEdges[-1]],
+                [1.0]*2,
+                color=colorCycle[2],
+                zorder=0,
+                linewidth=1.5)
+        leftSubBinEdges = list(leftBinEdges)
+        if logarithmic:
+            diffHistograms[i] = [abs(binHeight) for binHeight in diffHistograms[i]]
+        if style == 'step':
+            leftSubBinEdges.append(rightBinEdges[-1])
+            try:
+                histogramList = diffHistograms[i].tolist()
+            except AttributeError:
+                histogramList = diffHistograms[i]
+            histogramList.append(histogramList[-1])
+            if plotMode == 'replica':
+                raise Exception('Replicas with diff plot not implemented!')
+            else:
+                ax[1,0].step(leftSubBinEdges,
+                        histogramList,
+                        color=colorCycle[0],
+                        where='post')
+
+
 
     if plotMode == 'replica':
         x = []
@@ -387,7 +469,7 @@ def plot(configurationFileName):
             sigmaMinusStdDevs.append(lower)
             sigmaPlusStdDevs.append(upper)
             sigmaPlusStdDevs.append(upper)
-        ax.fill_between(x,
+        ax[0,0].fill_between(x,
                         sigmaPlusStdDevs,
                         sigmaMinusStdDevs,
                         # facecolor=baseColorNames[5],
@@ -395,20 +477,54 @@ def plot(configurationFileName):
                         alpha=0.3,
                         zorder=0)
 
+
+
+    for row in ax:
+        for col in row:
+            if col is not None:
+                if xRange:
+                    col.set_xlim(xRange)
+                else:
+                    col.set_xlim([leftBinEdges[0], rightBinEdges[-1]])
+
+    try:
+        horizontalLines = configuration["horizontalLines"]
+        for line in horizontalLines:
+            # ax[0,0].get_xlim()
+            # ax[0,0].plot([ax[0,0].get_xlim()[0], ax[0,0].get_xlim()[-1]],
+            #         [line]*2,
+            #         color="lightgray",
+            #         zorder=0,
+            #         linewidth=1.5)
+            for row in ax:
+                for col in row:
+                    if col is not None:
+                        col.get_xlim()
+                        col.plot([col.get_xlim()[0], col.get_xlim()[-1]],
+                                [line]*2,
+                                color="lightgray",
+                                zorder=-1,
+                                linewidth=1.5)
+    except KeyError:
+        pass
+
     if logarithmic and style == 'step':
-        plt.yscale('log')
+        ax[0,0].set_yscale('log')
 
     xLogarithmic = readConfiguration(configuration,
                                      key='xLogarithmic',
                                      default=False)
     if xLogarithmic:
-        plt.xscale('log')
+        for row in ax:
+            for col in row:
+                if col is not None:
+                    col.set_xscale('log')
 
     if yRange:
-        plt.ylim(yRange)
+        ax[0,0].set_ylim(yRange)
 
-    if xRange:
-        plt.xlim(xRange)
+    if diffYRange:
+        ax[1,0].set_ylim(diffYRange)
 
     legendHidden = readConfiguration(configuration,
                                      key='legendHidden',
@@ -418,13 +534,45 @@ def plot(configurationFileName):
         legendLocation = readConfiguration(configuration,
                                            key='legendLocation',
                                            default='best')
-        handles, labels = ax.get_legend_handles_labels()
+        handles, labels = ax[0,0].get_legend_handles_labels()
         if plotMode == 'replica':
             handles = handles[-4:-2]
             labels = ["Replica", "$\mu \pm \sigma$"]
-        ax.legend(handles, labels, loc=legendLocation)
-        ax.get_legend().set_title('Closure Tests')
+        borderaxespad = readConfiguration(configuration,
+                                         key='borderaxespad',
+                                         default=1.2)
+        legend = ax[0,0].legend(handles, labels, loc=legendLocation, fontsize=16, labelspacing=1.1, borderaxespad=borderaxespad,
+                                fancybox=True,
+                                frameon=True,
+                                ncol=2)
+        legend.get_frame().set_color((0.96,0.96,0.96))
+        # ax[0,0].get_legend().set_title('Closure Tests')
         # ax.get_legend().set_bbox_to_anchor((0.1,0.075))
+
+    annotation_line1 = readConfiguration(configuration,
+                                     key='annotation_line1',
+                                     default=None)
+
+    if annotation_line1 is not None:
+        annotation_data_x = readConfiguration(configuration,
+                                         key='annotation_data_x',
+                                         default=0.0)
+        annotation_data_line1_y = readConfiguration(configuration,
+                                         key='annotation_data_line1_y',
+                                         default=0.0)
+        ax[0,0].annotate(annotation_line1,
+            (annotation_data_x,annotation_data_line1_y),
+            horizontalalignment='left')
+        annotation_line2 = readConfiguration(configuration,
+                                         key='annotation_line2',
+                                         default=None)
+        if annotation_line2 is not None:
+            annotation_data_line2_y = readConfiguration(configuration,
+                                             key='annotation_data_line2_y',
+                                             default=0.0)
+            ax[0,0].annotate(annotation_line2,
+                (annotation_data_x,annotation_data_line2_y),
+                horizontalalignment='left')
 
     title = readConfiguration(configuration,
                               key='title',
@@ -436,16 +584,49 @@ def plot(configurationFileName):
                                key='xLabel',
                                default=None)
     if xLabel is not None:
-        ax.set_xlabel(xLabel)
+        plt.xlabel(xLabel, fontsize=16)
+        # ax.set_xlabel(xLabel)
     yLabel = readConfiguration(configuration,
                                key='yLabel',
                                default=None)
     if yLabel is not None:
-        ax.set_ylabel(yLabel)
+        ax[0,0].set_ylabel(yLabel, fontsize=16)
+        ax[0,0].get_yaxis().set_label_coords(-0.11,0.5)
+        # ax.set_ylabel(yLabel)
 
-    ax.get_yaxis().get_major_formatter().set_useOffset(False)
+    if logarithmic == False:
+        ax[0,0].get_yaxis().get_major_formatter().set_useOffset(False)
+    if wantsDiffSubplot:
+        fig.subplots_adjust(hspace=0.0)
+        ax[0,0].spines['bottom'].set_visible(False)
+        ax[0,0].xaxis.tick_bottom()
+        ax[0,0].tick_params(labelbottom='off')
+        # Symmetrix y axis range around 1
+        # for single_ax in ax[:,0]:
+        #     ylim_from_ones = [abs(1 - ylim) for ylim in single_ax.get_ylim()]
+        #     single_ax.set_ylim([1 - max(ylim_from_ones), 1 + max(ylim_from_ones)])
+        # for label in ax[1,0].yaxis.get_ticklabels()[::2]:
+        #     label.set_visible(False)
+        ax[1,0].get_yaxis().get_major_formatter().set_useOffset(False)
+        # ax[0,0].get_yaxis().set_major_locator(MaxNLocator(nbins=9, prune = 'lower'))
+        ax[1,0].get_yaxis().set_major_locator(MaxNLocator(nbins=6, prune = 'upper'))
+        yTicks = readConfiguration(configuration,
+                                   key='yticks',
+                                   default=None)
+        diffYTicks = readConfiguration(configuration,
+                                   key='diffyticks',
+                                   default=None)
+        if yTicks is not None:
+            ax[0,0].set_yticks(yTicks)
+        if diffYTicks is not None:
+            ax[1,0].set_yticks(diffYTicks)
+        ax[1,0].set_ylabel("APPLgrid / fastNLO", fontsize=16)
+        ax[1,0].get_yaxis().set_label_coords(-0.11,0.5)
 
-    plt.savefig(os.path.splitext(configurationFileName)[0] + ".pdf")
+    if args.transparency:
+        plt.savefig(os.path.splitext(configurationFileName)[0] + ".png", transparent=True)
+    else:
+        plt.savefig(os.path.splitext(configurationFileName)[0] + ".pdf")
 
 # TODO: Include parsing of arguments
 # These should have a higher priority compared to the configuration file
@@ -455,6 +636,7 @@ parser.add_argument("files", default="Plot.yaml", nargs='*')
 parser.add_argument("-n", "--normalize", action="store_true")
 parser.add_argument("-d", "--delete-bins", type=int, default=0)
 parser.add_argument("-l", "--usetex", action="store_true")
+parser.add_argument("-t", "--transparency", action="store_true")
 args = parser.parse_args()
 
 if args.usetex:
@@ -475,18 +657,27 @@ if args.usetex:
     fig_size = figure_size_from_width(line_width * fig_line_width_fraction)
 
     # Set parameters
-    params = {'font.size': 11,
-              # 'axes.labelsize': 10,
-              # 'text.fontsize': 10,
-              # 'legend.fontsize': 10,
-              # 'xtick.labelsize': 8,
-              # 'ytick.labelsize': 8,
-              'font.family': 'serif',
-              'text.usetex': True,
-              'text.latex.preamble': [r"\usepackage{amstext}",
-                                      r"\usepackage{siunitx}"],
-              'figure.figsize': fig_size}
+    # params = {'font.size': 14,
+    #           # 'axes.labelsize': 10,
+    #           # 'text.fontsize': 10,
+    #           # 'legend.fontsize': 10,
+    #           # 'xtick.labelsize': 8,
+    #           # 'ytick.labelsize': 8,
+    #           'font.family': 'sans-serif',
+    #           'text.usetex': True,
+    #           'text.latex.preamble': [r"\usepackage{amstext}",
+    #                                   r"\usepackage{siunitx}"],
+    #           'figure.figsize': fig_size}
+    params = {'font.size': 16, 'text.usetex': True}
     plt.rcParams.update(params)
+    mpl.rcParams['text.latex.preamble'] = [
+       r'\usepackage[T1]{fontenc}'
+       r'\renewcommand*\familydefault{\sfdefault}'
+       r'\usepackage{siunitx}',   # i need upright \micro symbols, but you need...
+       r'\sisetup{detect-all}',   # ...this to force siunitx to actually use your fonts
+       r'\usepackage{sansmath}',  # load up the sansmath so that math -> helvet
+       r'\sansmath'               # <- tricky! -- gotta actually tell tex to use!
+]  
 
 # baseColorNames = [grapefruit.Color.RgbToHtml(100./255.,177./255.,209./255.),  # '#a6cee3',
 #                   '#1f78b4',
@@ -505,6 +696,8 @@ if args.usetex:
 #                   grapefruit.Color.RgbToHtml(128./255.,64./255.,0./255.)
 #                   ]
 
-sns.set_context('paper')  # Contexts are paper, notebook, talk and poster
+sns.set_context('notebook')  # Contexts are paper, notebook, talk and poster
+sns.set_style('ticks')  # Styles are darkgrid, whitegrid, dark, white, ticks
+sns.set_palette('muted')
 for fileName in args.files:
     plot(fileName)
